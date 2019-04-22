@@ -1,5 +1,7 @@
 #include <iostream>
 #include <random>
+#include <thread>
+#include <chrono>
 #include <SFML/Graphics.hpp>
 
 constexpr int cellLength = 40;
@@ -8,6 +10,7 @@ constexpr int windowX = 800;
 constexpr int windowY = 800;
 constexpr int numColumns = windowX / cellLength;
 constexpr int numRows    = windowY / cellLength;
+constexpr int waitTime = 0;
 
 struct position
 {
@@ -290,7 +293,9 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(windowX, windowY), "Maze Generator");
 	std::vector<std::vector<cell> >  cellMap;
 	bool allVisited = false;
+	std::random_device rd;
 	std::default_random_engine generator;
+	generator.seed(rd());
 	std::uniform_int_distribution<int> distribution(0, 3);
 
 	for (int i = 0; i < numColumns; i++)
@@ -323,6 +328,7 @@ int main()
 		//Maze-gen algorithm
 		if (!allVisited)
 		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
 			//Check validity of moves
 			bool validMoves[4];
 			checkValidMoves(cellMap, mapNav.returnPos(), validMoves);
