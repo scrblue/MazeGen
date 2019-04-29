@@ -4,14 +4,6 @@
 #include <chrono>
 #include <SFML/Graphics.hpp>
 
-constexpr int cellLength = 40;
-constexpr int lineWidth = 1;
-constexpr int windowX = 800;
-constexpr int windowY = 800;
-constexpr int numColumns = windowX / cellLength;
-constexpr int numRows    = windowY / cellLength;
-constexpr int waitTime = 0;
-
 struct position
 {
 	int x, y;
@@ -32,12 +24,12 @@ class cell
 		//Whether or not the cell has been visited by the navigator already
 		bool hasBeenVisited = false;
 	public:
-		cell(int setX, int setY);
+		cell(int setX, int setY, int cellLength, int lineWidth);
 		//Configures SFML shapes
-		void configLine(int d);
+		void configLine(int di, int cellLength, int lineWidth);
 		//Returns a copy of the cell created
 		sf::RectangleShape returnLine (int d);
-		sf::RectangleShape returnHighlight();
+		sf::RectangleShape returnHighlight(int cellLength);
 		//Returns/sets whether the specified direction is to be drawn
 		bool returnDrawStatus (int d);
 		void setDrawStatus (int d, bool status);
@@ -122,14 +114,14 @@ bool cell::returnDrawStatus (int d)
 	}
 }
 
-cell::cell (int setX, int setY)
+cell::cell (int setX, int setY, int cellLength, int lineWidth)
 {
 	p.x = setX;
 	p.y = setY;
-	configLine(0);
-	configLine(1);
-	configLine(2);
-	configLine(3);
+	configLine(0, cellLength, lineWidth);
+	configLine(1, cellLength, lineWidth);
+	configLine(2, cellLength, lineWidth);
+	configLine(3, cellLength, lineWidth);
 }
 
 sf::RectangleShape cell::returnLine (int d)
@@ -152,7 +144,7 @@ sf::RectangleShape cell::returnLine (int d)
 	}
 }
 
-sf::RectangleShape cell::returnHighlight()
+sf::RectangleShape cell::returnHighlight(int cellLength)
 {
 	sf::RectangleShape highlight(sf::Vector2f(cellLength, cellLength));
 	highlight.setPosition(p.x*cellLength, p.y*cellLength);
@@ -160,7 +152,7 @@ sf::RectangleShape cell::returnHighlight()
 	return highlight;
 }
 
-void cell::configLine(int d)
+void cell::configLine(int d, int cellLength, int lineWidth)
 {
 	if (d == 0)
 	{
@@ -270,6 +262,10 @@ void checkValidMoves(std::vector<std::vector<cell>>cellMap, position currentPosi
 	validMoves[1] = false;
 	validMoves[2] = false;
 	validMoves[3] = false;
+
+	int numRows = cellMap[0].size();
+	int numColumns = cellMap.size();
+
 	if (currentPosition.y > 0 && !cellMap[currentPosition.x][currentPosition.y-1].returnVisited())
 	{
 		validMoves[0] = true;
@@ -290,6 +286,21 @@ void checkValidMoves(std::vector<std::vector<cell>>cellMap, position currentPosi
 
 int main()
 {
+	int numColumns, numRows, cellLength, lineWidth, waitTime, windowX, windowY;
+	std::cout << "Maze width: ";
+	std::cin >> numColumns;
+	std::cout << "\nMaze height: ";
+	std::cin >> numRows;
+	std::cout << "\nCell length: ";
+	std::cin >> cellLength;
+	std::cout << "\nLine width: ";
+	std::cin >> lineWidth;
+	std::cout << "\nWait time (ms): ";
+	std::cin >> waitTime;
+
+	windowX = numColumns * cellLength;
+	windowY = numRows * cellLength;
+
 	sf::RenderWindow window(sf::VideoMode(windowX, windowY), "Maze Generator");
 	std::vector<std::vector<cell> >  cellMap;
 	bool allVisited = false;
@@ -303,7 +314,7 @@ int main()
 		cellMap.push_back( std::vector<cell>() );
 		for (int j = 0; j < numRows; j++)
 		{
-			cell newCell(i, j);
+			cell newCell(i, j, cellLength, lineWidth);
 			cellMap[i].push_back(newCell);
 		}
 	}
@@ -402,7 +413,7 @@ int main()
 			{
 				if (cellMap[i][j].returnHighlightStatus())
 				{
-					window.draw(cellMap[i][j].returnHighlight());
+					window.draw(cellMap[i][j].returnHighlight(cellLength));
 				}
 				for (int k = 0; k < 4; k++)
 				{
